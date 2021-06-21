@@ -76,6 +76,10 @@ class TemplateRender {
     if (this.useMarkdown === undefined) {
       this.setUseMarkdown(this._engineName === "md");
     }
+    this.defaultEngine = this.extensionMap.engineManager.getDefaultEngine(
+      this._engineName,
+      this.includesDir
+    );
   }
 
   get engineName() {
@@ -223,23 +227,39 @@ class TemplateRender {
     return this.engine._testRender(str, data);
   }
 
-  async getCompiledTemplate(str) {
-    // TODO refactor better, move into TemplateEngine logic
+  async getCompiledTemplateByEngine(str, engine) {
     if (this.engineName === "md") {
-      return this.engine.compile(
+      return engine.compile(
         str,
         this.engineNameOrPath,
         this.parseMarkdownWith,
         !this.useMarkdown
       );
     } else if (this.engineName === "html") {
-      return this.engine.compile(
-        str,
-        this.engineNameOrPath,
-        this.parseHtmlWith
-      );
+      return engine.compile(str, this.engineNameOrPath, this.parseHtmlWith);
     } else {
-      return this.engine.compile(str, this.engineNameOrPath);
+      return engine.compile(str, this.engineNameOrPath);
+    }
+  }
+
+  async getCompiledTemplate(str) {
+    // TODO refactor better, move into TemplateEngine logic
+    // aka we're using a custom extension with a CustomEngine
+    if (this.defaultEngine && this.engine.constructor.name !== this.defaultEngine.constructor.name) {
+      const compiler = async (data) => {
+        if (this.defaultEngine) {
+          const renderFn = await this.getCompiledTemplateByEngine(
+            str,
+            this.defaultEngine
+          );
+          return await renderFn(data);
+        } else {
+          return undefined;
+        }
+      };
+      return this.engine.compile(str, this.engineNameOrPath, compiler);
+    } else {
+      return await this.getCompiledTemplateByEngine(str, this.engine);
     }
   }
 }

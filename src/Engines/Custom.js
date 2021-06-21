@@ -67,11 +67,15 @@ class CustomEngine extends TemplateEngine {
     }
   }
 
-  async compile(str, inputPath) {
+  async compile(str, inputPath, defaultRenderer) {
     await this._runningInit();
 
     // TODO generalize this (look at JavaScript.js)
-    return this.entry.compile.bind({ config: this.config })(str, inputPath);
+    return this.entry.compile.bind({ config: this.config })(
+      str,
+      inputPath,
+      defaultRenderer
+    );
   }
 
   get defaultTemplateFileExtension() {

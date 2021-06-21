@@ -1,6 +1,19 @@
 const EleventyBaseError = require("./EleventyBaseError");
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
 
+const defaultKeyToClassMap = {
+  ejs: "Ejs",
+  md: "Markdown",
+  html: "Html",
+  hbs: "Handlebars",
+  mustache: "Mustache",
+  haml: "Haml",
+  pug: "Pug",
+  njk: "Nunjucks",
+  liquid: "Liquid",
+  "11ty.js": "JavaScript",
+};
+
 class TemplateEngineManager {
   constructor(config) {
     if (!config) {
@@ -13,18 +26,7 @@ class TemplateEngineManager {
 
   get keyToClassNameMap() {
     if (!this._keyToClassNameMap) {
-      this._keyToClassNameMap = {
-        ejs: "Ejs",
-        md: "Markdown",
-        html: "Html",
-        hbs: "Handlebars",
-        mustache: "Mustache",
-        haml: "Haml",
-        pug: "Pug",
-        njk: "Nunjucks",
-        liquid: "Liquid",
-        "11ty.js": "JavaScript",
-      };
+      this._keyToClassNameMap = Object.assign({}, defaultKeyToClassMap);
 
       if ("extensionMap" in this.config) {
         for (let entry of this.config.extensionMap) {
@@ -33,6 +35,22 @@ class TemplateEngineManager {
       }
     }
     return this._keyToClassNameMap;
+  }
+
+  getDefaultEngine(name, includesDir) {
+    const hasEngine = !!defaultKeyToClassMap[name];
+    if (!hasEngine) {
+      return undefined;
+    }
+
+    let path = "./Engines/" + defaultKeyToClassMap[name];
+    const cls = require(path);
+    let instance = new cls(name, includesDir);
+    instance.extensionMap = defaultKeyToClassMap;
+    instance.config = this.config;
+    instance.engineManager = this;
+
+    return instance;
   }
 
   getClassNameFromTemplateKey(key) {
