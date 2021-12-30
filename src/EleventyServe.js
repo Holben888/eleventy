@@ -51,7 +51,7 @@ class EleventyServe {
     return TemplatePath.join(this.getRedirectDir(dirName), "index.html");
   }
 
-  getOptions(port) {
+  async getOptions(port) {
     let pathPrefix = this.getPathPrefix();
 
     // TODO customize this in Configuration API?
@@ -75,6 +75,7 @@ class EleventyServe {
       }
     }
 
+    const browserSyncConfig = await this.config.browserSyncConfig
     return Object.assign(
       {
         server: serverConfig,
@@ -87,7 +88,7 @@ class EleventyServe {
         ghostMode: false, // Default changed in 1.0
         index: "index.html",
       },
-      this.config.browserSyncConfig
+      browserSyncConfig
     );
   }
 
@@ -133,7 +134,7 @@ class EleventyServe {
     );
   }
 
-  serve(port) {
+  async serve(port) {
     // Only load on serve—this is pretty expensive
     // We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
     let server;
@@ -171,7 +172,7 @@ class EleventyServe {
 
     this.cleanupRedirect(this.savedPathPrefix);
 
-    let options = this.getOptions(port);
+    let options = await this.getOptions(port);
     this.server.init(options);
 
     // this needs to happen after `.getOptions`

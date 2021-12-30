@@ -64,6 +64,7 @@ class UserConfig {
     this.watchJavaScriptDependencies = true;
     this.additionalWatchTargets = [];
     this.browserSyncConfig = {};
+    this.asyncBrowserSyncConfig = new Promise();
     this.globalData = {};
     this.chokidarConfig = {};
     this.watchThrottleWaitTime = 0; //ms
@@ -675,6 +676,7 @@ class UserConfig {
 
   setBrowserSyncConfig(options = {}, mergeOptions = true) {
     if (mergeOptions) {
+      // TODO: solve merge options problem for async options
       this.browserSyncConfig = merge(this.browserSyncConfig, options);
     } else {
       this.browserSyncConfig = options;
